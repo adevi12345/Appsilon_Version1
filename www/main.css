@@ -1,0 +1,18 @@
+
+.form-control {
+    border-radius: 96px;
+    box-shadow: none;
+    padding-top: 7px;
+    /* border-color: #3968c5; */
+    width: 351px;
+    height: 41px;
+    /* margin: 68px 755px 59px 148px; */
+    padding: 13px 34.7px 15px 35px;
+    border-radius: -1px;
+    box-shadow: 9px 8px 15px 0 var(--greyish-16);
+    background-color: #fff;
+}
+.search_button {
+    margin-top: 85px;
+    margin-left: -121px;
+}
