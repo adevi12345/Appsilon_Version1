@@ -39,17 +39,22 @@ server <- function(input, output,session) {
     values$input_dataset<-read_xlsx("./dummy_input.xlsx")
     
      observeEvent(input$searchbutton,{
-        
-        print(input$search_name)
-         
+                 
         values$checkbox_species<-filter(values$input_dataset,`Scientific name` == input$search_name)
-
+         
+        if(nrow(values$checkbox_species)==0){
+            
+            showModal(modalDialog(
+                h3("No records found for your text"),
+                h4("(Please give the correct Scienticfic Name)")
+            ))
+        }else{
         output$checkbox_ui<-renderUI({
            
             checkboxGroupInput("checkbox_speciesgroup","select one",choices =  values$checkbox_species$Species)
             
         })
-       
+       }
     })
     observeEvent(input$checkbox_speciesgroup,{
         
