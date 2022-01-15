@@ -16,3 +16,31 @@
     margin-top: 85px;
     margin-left: -121px;
 }
+
+.skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper {
+    background-color: #15354a;
+}
+
+.content-wrapper {
+    min-height: 100%;
+    background-color: rgb(255 255 255);
+    z-index: 800;
+}
+
+.skin-blue .main-header .logo {
+    background-color: rgb(255 255 255);
+    color: #fff;
+    
+}
+
+.sidebar {
+    color: rgb(13 39 52);
+}
+
+.modal.in .modal-dialog {
+    -webkit-transform: translate(0,0);
+    -ms-transform: translate(0,0);
+    -o-transform: translate(0,0);
+    transform: translate(0,0);
+    bottom: -196px;
+}
