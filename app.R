@@ -2,33 +2,28 @@ library(shiny)
 library(shinydashboard)
 library(dplyr)
 library(leaflet)
+library(htmltools)
+library(shinyjs)
 library(readxl)
 
+title<-tags$img(src="icon.png",height='50',width='150')
 ui <- dashboardPage(
 
-    dashboardHeader(title="R Shiny - Biodiversity dashboard assignment (2021)"),
+    dashboardHeader(title=title),
     dashboardSidebar(width = 400,
+
+                     tags$br(),
+                     uiOutput("selectize_nameui")
                      
-                     fluidRow(
-                         column(width = 7,
-                                textInput(
-                                    "search_name", "Search with Scientific Name", placeholder = "Search for Species"
-                                )),
-                         
-                         column(width = 2,
-                                tags$div(class="search_button",
-                                         actionButton("searchbutton","Search"))
-                         )
-                         
-                     ),
-                     uiOutput("checkbox_ui")
     ),
     dashboardBody(
         includeCSS("www/main.css"),
+        useShinyjs(),
         
         box(
-            title = "Title 2", width = 6, solidHeader = TRUE,status = "primary",
-            leafletOutput("species_map", height = "550px")   )
+            title = "Selected Species Observations on the map", width = 9, solidHeader = TRUE,status = "primary",
+            uiOutput("plottext_map"),
+            )
         )
 )
 
@@ -36,39 +31,65 @@ ui <- dashboardPage(
 server <- function(input, output,session) {
       values <- reactiveValues()
     
-    values$input_dataset<-read_xlsx("./dummy_input.xlsx")
+      values$input_dataset<-read_xlsx("D:/FL/Appsilon/Shiny_Developer/dummy_input.xlsx")
+      disable("download.graphDPS")
+  
+    output$selectize_nameui<-renderUI({
+      label<-tags$h4('Search with ScientificName:')
+      selectInput('distinct_vars',label, choices = unique(values$input_dataset$`Scientific name`), multiple=TRUE)
+    })
     
-     observeEvent(input$searchbutton,{
-                 
-        values$checkbox_species<-filter(values$input_dataset,`Scientific name` == input$search_name)
+    
+    output$plottext_map<-renderUI({
+      
+      if(is.null(input$distinct_vars )){
+        infoBoxOutput("progressBox2")
+      }else{
+        enable("download.graphDPS")
+        leafletOutput("species_map", height = "550px")
+      }
+      })
+    
+    output$progressBox2 <- renderInfoBox({
+      infoBox(
+        "Please Select Scientific Name", paste0("Enter your search to view the Observations on the Map "),icon = icon("map-marker"),
+        color = "purple", fill = TRUE
+      )
+    })
+     observeEvent(input$distinct_vars,{
+        
+       values$checkbox_values<-input$distinct_vars
+       
+        
+        values$checkbox_species<-filter(values$input_dataset,`Scientific name` %in% values$checkbox_values)
+        
+      
+    
+          output$species_map <- renderLeaflet({
+            
+            m<-leaflet(values$checkbox_species) %>%
+              addTiles() %>%
+              addCircleMarkers(lng= ~log, lat= ~lal, label = ~htmlEscape(Species),
+                               labelOptions = labelOptions(noHide = T, direction = "bottom",
+                                                           style = list(
+                                                             "color" = "black",
+                                                             "font-family" = "serif",
+                                                             "font-style" = "italic",
+                                                             "box-shadow" = "3px 3px rgba(0,0,0,0.25)",
+                                                             "font-size" = "12px",
+                                                             "border-color" = "rgba(0,0,0,0.5)"
+                                                           ))
+              )
+            
+            
+            m %>%addMiniMap(
+              tiles = providers$Esri.WorldStreetMap,
+              toggleDisplay = TRUE)
+            })
          
-        if(nrow(values$checkbox_species)==0){
-            
-            showModal(modalDialog(
-                h3("No records found for your text"),
-                h4("(Please give the correct Scienticfic Name)")
-            ))
-        }else{
-        output$checkbox_ui<-renderUI({
-           
-            checkboxGroupInput("checkbox_speciesgroup","select one",choices =  values$checkbox_species$Species)
-            
-        })
-       }
-    })
-    observeEvent(input$checkbox_speciesgroup,{
-        
-        values$checkbox_values<-input$checkbox_speciesgroup
-        
-        values$map_table<-filter(values$checkbox_species, Species %in%  values$checkbox_values)
-        
-        output$species_map <- renderLeaflet({
-            
-            leaflet(values$map_table) %>%
-                addTiles() %>%
-                addMarkers(lng= ~log, lat= ~lal, popup="Sample Place")
-        })  
-    })
+         
+          })
+
       
     }
 shinyApp(ui, server)
